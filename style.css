@@ -1,0 +1,453 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    /* UrbanEmissions.Info palette */
+    --bg:         #f5f6f4;        /* off-white page background */
+    --surface:    #ffffff;        /* header / panel surfaces   */
+    --border:     #dde0d8;        /* subtle grey-green borders */
+    --accent:     #164D12;        /* UE brand green            */
+    --accent-mid: #2a7a24;        /* slightly lighter green    */
+    --accent-lt:  #e8f2e7;        /* tint for hover / fills    */
+    --accent2:    #b84c00;        /* warm orange for warnings  */
+    --accent2-lt: #fdf0e8;
+    --text:       #1a1e18;        /* near-black body text      */
+    --muted:      #6b7268;        /* secondary labels          */
+    --panel:      #f0f2ee;        /* side panel background     */
+    --pop-bg:     #eaf4e9;        /* population entry fill     */
+    --pop-border: #b6d9b3;
+}
+
+body {
+    font-family: 'Source Serif 4', 'Georgia', serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 15px;
+}
+
+/* ── HEADER ───────────────────────────────────────────────── */
+header {
+    padding: 10px 20px;
+    border-bottom: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    z-index: 100;
+    flex-shrink: 0;
+}
+
+.logo {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    font-family: 'Source Serif 4', serif;
+}
+
+.logo span {
+    color: var(--accent);
+    font-style: italic;
+}
+
+.logo-dot {
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2.5s infinite;
+    flex-shrink: 0;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.45; transform: scale(0.75); }
+}
+
+.toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn {
+    font-family: 'Inter', 'Helvetica Neue', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 7px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    background: var(--surface);
+    color: var(--muted);
+    transition: all 0.15s ease;
+    letter-spacing: 0.02em;
+}
+
+.btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-lt);
+}
+
+.btn.active {
+    background: var(--accent-lt);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(22,77,18,0.1);
+}
+
+.btn.danger {
+    border-color: #ccc;
+    color: var(--muted);
+}
+
+.btn.danger:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: var(--accent2-lt);
+}
+
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.divider {
+    width: 1px; height: 22px;
+    background: var(--border);
+    margin: 0 4px;
+}
+
+/* ── TIF STATUS BAR ───────────────────────────────────────── */
+.tif-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 20px;
+    background: #fafbf9;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Inter', 'Helvetica Neue', sans-serif;
+    font-size: 0.75rem;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.tif-status.ready {
+    background: var(--accent-lt);
+    color: var(--accent);
+    border-bottom-color: var(--pop-border);
+}
+
+.tif-status.error {
+    background: var(--accent2-lt);
+    color: var(--accent2);
+    border-bottom-color: #f5c9a8;
+}
+
+.tif-status.loading {
+    color: #7a6800;
+    background: #fefbe8;
+    border-bottom-color: #e8d96e;
+}
+
+.tif-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+    transition: background 0.3s ease;
+}
+
+.tif-status.ready   .tif-dot { background: var(--accent);     animation: pulse 2s infinite; }
+.tif-status.error   .tif-dot { background: var(--accent2); }
+.tif-status.loading .tif-dot { background: #c8a800;            animation: pulse 1s infinite; }
+
+/* ── MAIN LAYOUT ──────────────────────────────────────────── */
+.main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+#map {
+    flex: 1;
+    z-index: 1;
+}
+
+/* Light map — no dark filter */
+.leaflet-tile { filter: none; }
+
+/* ── SIDE PANEL ───────────────────────────────────────────── */
+.side-panel {
+    width: 320px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Inter', 'Helvetica Neue', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.panel-header .badge {
+    background: var(--accent-lt);
+    color: var(--accent);
+    border: 1px solid var(--pop-border);
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+
+.console-output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    font-family: 'Inter', 'Helvetica Neue', sans-serif;
+    font-size: 0.78rem;
+    line-height: 1.65;
+}
+
+.console-output::-webkit-scrollbar { width: 4px; }
+.console-output::-webkit-scrollbar-track { background: transparent; }
+.console-output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── LOG ENTRIES ──────────────────────────────────────────── */
+.log-entry {
+    padding: 10px 12px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    border: 1px solid transparent;
+    animation: fadeIn 0.2s ease;
+    background: var(--surface);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(3px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.log-entry.info {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+.log-entry.clear {
+    background: var(--accent2-lt);
+    border-color: #f5c9a8;
+}
+
+.log-ts {
+    color: var(--muted);
+    font-size: 0.68rem;
+    margin-bottom: 4px;
+    font-family: 'Inter', monospace;
+}
+
+.log-type {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.78rem;
+    margin-bottom: 4px;
+}
+
+.log-entry.clear .log-type { color: var(--accent2); }
+
+.log-coords {
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-size: 0.76rem;
+    line-height: 1.6;
+}
+
+.empty-state {
+    color: var(--muted);
+    text-align: center;
+    margin-top: 48px;
+    font-size: 0.82rem;
+    line-height: 1.9;
+}
+
+.empty-state .icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* ── POPULATION ENTRY ─────────────────────────────────────── */
+.log-entry.population {
+    background: var(--pop-bg);
+    border-color: var(--pop-border);
+}
+
+.pop-label {
+    color: var(--accent) !important;
+    font-size: 0.78rem;
+}
+
+.pop-spinner {
+    color: var(--muted);
+    font-style: italic;
+}
+
+.pop-big {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-top: 4px;
+    font-family: 'Source Serif 4', serif;
+}
+
+.pop-raw {
+    display: block;
+    color: var(--muted);
+    font-size: 0.73rem;
+    margin-top: 2px;
+    margin-bottom: 12px;
+}
+
+/* ── CPCB MONITORS TABLE ──────────────────────────────────── */
+.monitors-label {
+    display: block;
+    color: var(--muted);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    margin-bottom: 7px;
+    padding-top: 10px;
+    border-top: 1px solid var(--pop-border);
+}
+
+.monitors-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.monitor-card {
+    background: var(--surface);
+    border: 1px solid var(--pop-border);
+    border-radius: 4px;
+    padding: 7px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.monitor-pollutant {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.monitor-val {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1.15;
+    font-family: 'Source Serif 4', serif;
+}
+
+.monitor-unit {
+    font-size: 0.62rem;
+    color: var(--muted);
+}
+
+.log-entry.pop-error {
+    background: var(--accent2-lt);
+    border-color: #f5c9a8;
+}
+
+.log-entry.pop-error .pop-label { color: var(--accent2) !important; }
+.log-entry.pop-error .log-coords { color: var(--accent2); font-size: 0.76rem; }
+
+/* ── DRAWING MODE ─────────────────────────────────────────── */
+.drawing #map { cursor: crosshair !important; }
+
+.mode-indicator {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    color: var(--muted);
+    pointer-events: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.mode-indicator.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-lt);
+}
+
+.mode-indicator .hint {
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+/* ── LEAFLET OVERRIDES ────────────────────────────────────── */
+.leaflet-control-zoom {
+    border: 1.5px solid var(--border) !important;
+    border-radius: 6px !important;
+    overflow: hidden;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.1) !important;
+}
+
+.leaflet-control-zoom a {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600 !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: var(--accent-lt) !important;
+    color: var(--accent) !important;
+}
+
+.leaflet-control-attribution {
+    background: rgba(255,255,255,0.85) !important;
+    color: var(--muted) !important;
+    font-size: 0.65rem !important;
+}
+
+.leaflet-control-attribution a { color: var(--accent) !important; }

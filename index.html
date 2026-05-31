@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Monitor Requirements · Urban Emissions Info</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,700;0,800;1,400;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    How many monitors are needed? <span>Urban Emissions Info</span>
+  </div>
+  <div class="toolbar">
+    <button class="btn" id="btn-bbox" onclick="setMode('bbox')">⬜ Bounding Box</button>
+    <button class="btn" id="btn-poly" onclick="setMode('polygon')">⬡ Polygon</button>
+    <div class="divider"></div>
+    <button class="btn danger" onclick="clearAll()">✕ Clear</button>
+  </div>
+</header>
+
+<div id="tif-status" class="tif-status">
+  <span class="tif-dot"></span>
+  <span id="tif-status-text">Loading LandScan raster…</span>
+</div>
+
+<div class="main">
+  <div id="map"></div>
+  <div class="side-panel">
+    <div class="panel-header">
+      Console Output
+      <span class="badge" id="log-count">0 shapes</span>
+    </div>
+    <div class="console-output" id="console-output">
+      <div class="empty-state">
+        <div class="icon">🗺️</div>
+        Draw a bounding box on the map.<br/>
+        Population &amp; CPCB monitor<br/>requirements will appear here.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mode-indicator" id="mode-indicator">
+  No mode selected
+  <div class="hint">Pick a tool above to start drawing</div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

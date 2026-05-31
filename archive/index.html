@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>India Map Drawing Tool</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap');
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    How many monitors are needed? <span>Urban Emissions Info</span>
+  </div>
+  <div class="toolbar">
+    <button class="btn" id="btn-bbox" onclick="setMode('bbox')">⬜ Bounding Box</button>
+    <button class="btn" id="btn-poly" onclick="setMode('polygon')">⬡ Polygon</button>
+    <div class="divider"></div>
+    <button class="btn danger" onclick="clearAll()">✕ Clear</button>
+  </div>
+</header>
+
+<div class="main">
+  <div id="map"></div>
+
+  <div class="side-panel">
+    <div class="panel-header">
+      Console Output
+      <span class="badge" id="log-count">0 shapes</span>
+    </div>
+    <div class="console-output" id="console-output">
+      <div class="empty-state">
+        <div class="icon">🗺️</div>
+        Draw a bounding box or polygon on the map.<br/>Coordinates will appear here.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mode-indicator" id="mode-indicator">
+  No mode selected
+  <div class="hint">Pick a tool above to start drawing</div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

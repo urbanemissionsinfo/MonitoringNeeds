@@ -1,0 +1,355 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --border: #1e2330;
+    --accent: #00e5a0;
+    --accent2: #ff6b35;
+    --text: #e8eaf2;
+    --muted: #5a6070;
+    --panel: #10131a;
+}
+
+body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+header {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    z-index: 100;
+    flex-shrink: 0;
+}
+
+.logo {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo span { color: var(--accent); }
+
+.logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--bg);
+    color: var(--muted);
+    transition: all 0.18s ease;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0, 229, 160, 0.06);
+}
+
+.btn.active {
+    background: rgba(0, 229, 160, 0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 12px rgba(0, 229, 160, 0.2);
+}
+
+.btn.danger:hover, .btn.danger.active {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(255, 107, 53, 0.1);
+    box-shadow: 0 0 12px rgba(255, 107, 53, 0.2);
+}
+
+.divider {
+    width: 1px; height: 24px;
+    background: var(--border);
+    margin: 0 4px;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+#map {
+    flex: 1;
+    z-index: 1;
+}
+
+/* Override leaflet tile filter for dark mode */
+.leaflet-tile {
+    filter: brightness(0.85) saturate(0.6) hue-rotate(180deg) invert(1);
+}
+
+.side-panel {
+    width: 300px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.panel-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.panel-header .badge {
+    background: rgba(0, 229, 160, 0.15);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+}
+
+.console-output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    line-height: 1.7;
+}
+
+.console-output::-webkit-scrollbar { width: 4px; }
+.console-output::-webkit-scrollbar-track { background: transparent; }
+.console-output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.log-entry {
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid transparent;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.log-entry.info {
+    background: rgba(0, 229, 160, 0.05);
+    border-color: rgba(0, 229, 160, 0.15);
+}
+
+.log-entry.clear {
+    background: rgba(255, 107, 53, 0.05);
+    border-color: rgba(255, 107, 53, 0.12);
+}
+
+.log-ts {
+    color: var(--muted);
+    font-size: 0.6rem;
+    margin-bottom: 4px;
+}
+
+.log-type {
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.log-entry.clear .log-type { color: var(--accent2); }
+
+.log-coords {
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.empty-state {
+    color: var(--muted);
+    text-align: center;
+    margin-top: 40px;
+    font-size: 0.7rem;
+    line-height: 2;
+}
+
+.empty-state .icon { font-size: 1.8rem; margin-bottom: 8px; }
+
+/* Cursor crosshair when drawing */
+.drawing #map { cursor: crosshair !important; }
+
+.mode-indicator {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.mode-indicator.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0, 229, 160, 0.08);
+}
+
+.mode-indicator .hint {
+    font-size: 0.6rem;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+/* Leaflet overrides */
+.leaflet-control-zoom {
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+    font-family: 'Syne', sans-serif !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: var(--bg) !important;
+    color: var(--accent) !important;
+}
+
+.leaflet-control-attribution {
+    background: rgba(13,15,20,0.7) !important;
+    color: var(--muted) !important;
+    font-size: 0.6rem !important;
+}
+
+.leaflet-control-attribution a { color: var(--muted) !important; }
+/* ── POPULATION ENTRIES ─────────────────────────────────── */
+.log-entry.population {
+    background: rgba(90, 120, 255, 0.06);
+    border-color: rgba(90, 120, 255, 0.2);
+}
+
+.pop-label {
+    color: #7b9cff !important;
+}
+
+.pop-big {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.pop-raw {
+    display: block;
+    color: var(--muted);
+    font-size: 0.62rem;
+    margin-top: 2px;
+}
+
+.pop-spinner {
+    color: var(--muted);
+    font-style: italic;
+}
+
+.log-entry.pop-error {
+    background: rgba(255, 107, 53, 0.05);
+    border-color: rgba(255, 107, 53, 0.2);
+}
+
+.log-entry.pop-error .pop-label {
+    color: var(--accent2) !important;
+}
+
+.log-entry.pop-error .log-coords {
+    color: var(--accent2);
+}
+
+/* ── MONITORS BREAKDOWN ──────────────────────────────────── */
+.monitors-label {
+    display: block;
+    color: var(--muted);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.monitors-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+}
+
+.monitor-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 229, 160, 0.05);
+    border: 1px solid rgba(0, 229, 160, 0.12);
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
+.monitor-pollutant {
+    color: var(--muted);
+    font-size: 0.65rem;
+}
+
+.monitor-val {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
