@@ -72,30 +72,59 @@ function setTifStatus(state, text) {
 // ── CPCB MONITOR CALCULATION ──────────────────────────────────
 function numMonitorsCpcb(pollutant, population) {
   let num = [];
+
   if (pollutant === 'spm') {
     num = [4];
-    num.push(Math.floor(4   + 0.6  * (Math.min(population, 1000000) - 100000) / 100000) + 1);
-    num.push(Math.floor(7.5 + 0.25 * (Math.min(population, 5000000) - 1000000) / 100000) + 1);
+    if (population < 100000) return num.reduce((a, b) => a + b, 0);
+    if (population > 1000000)
+      num.push(Math.floor(4 + 0.6 * 900000 / 100000) + 1);
+    else
+      num.push(Math.floor(4 + 0.6 * (population - 100000) / 100000) + 1);
+    if (population > 5000000)
+      num.push(Math.floor(7.5 + 0.25 * 4000000 / 100000) + 1);
+    else
+      num.push(Math.floor(7.5 + 0.25 * (population - 1000000) / 100000) + 1);
     if (population > 5000000)
       num.push(Math.floor(12 + 0.16 * (population - 5000000) / 100000) + 1);
   }
+
   if (pollutant === 'so2') {
     num = [3];
-    num.push(Math.floor(2.5 + 0.5  * (Math.min(population, 1000000)  - 100000)  / 100000) + 1);
-    num.push(Math.floor(6   + 0.15 * (Math.min(population, 10000000) - 1000000) / 100000) + 1);
-    if (population > 10000000) num.push(20);
+    if (population < 100000) return num.reduce((a, b) => a + b, 0);
+    if (population > 1000000)
+      num.push(Math.floor(2.5 + 0.5 * 900000 / 100000) + 1);
+    else
+      num.push(Math.floor(2.5 + 0.5 * (population - 100000) / 100000) + 1);
+    if (population > 10000000)
+      num.push(Math.floor(6 + 0.15 * 9000000 / 100000) + 1);
+    else
+      num.push(Math.floor(6 + 0.15 * (population - 1000000) / 100000) + 1);
+    if (population > 10000000)
+      num.push(20);
   }
+
   if (pollutant === 'no2') {
     num = [4];
-    num.push(Math.floor(4 + 0.6 * (Math.min(population, 1000000) - 100000) / 100000) + 1);
-    if (population > 1000000) num.push(10);
+    if (population < 100000) return num.reduce((a, b) => a + b, 0);
+    if (population > 1000000)
+      num.push(Math.floor(4 + 0.6 * 900000 / 100000) + 1);
+    else
+      num.push(Math.floor(4 + 0.6 * (population - 100000) / 100000) + 1);
+    if (population > 1000000)
+      num.push(10);
   }
+
   if (pollutant === 'co') {
     num = [1];
-    num.push(Math.floor(1 + 0.15 * (Math.min(population, 5000000) - 100000) / 100000) + 1);
+    if (population < 100000) return num.reduce((a, b) => a + b, 0);
+    if (population > 5000000)
+      num.push(Math.floor(1 + 0.15 * 4900000 / 100000) + 1);
+    else
+      num.push(Math.floor(1 + 0.15 * (population - 100000) / 100000) + 1);
     if (population > 5000000)
       num.push(Math.floor(6 + 0.05 * (population - 5000000) / 100000) + 1);
   }
+
   return num.reduce((a, b) => a + b, 0);
 }
 
@@ -295,7 +324,7 @@ function logCoords(coords) {
 
 function logPopulation(population, index) {
   const out = document.getElementById('console-output');
-  const millions = (population / 1_000_000).toFixed(2);
+  const millions = (population / 1_000_000).toFixed(4);
   const formatted = population.toLocaleString('en-IN');
 
   const pollutants = ['spm','so2','no2','co'];
@@ -319,7 +348,7 @@ function logPopulation(population, index) {
     <div class="log-coords">
       <span class="pop-big">${millions}M</span>
       <span class="pop-raw">${formatted} people</span>
-      <span class="monitors-label">Min. monitors required <br> CPCB guidelines</span>
+      <span class="monitors-label">Min. monitors required · CPCB guidelines</span>
       <div class="monitors-grid">${monitorsHTML}</div>
     </div>`;
   out.appendChild(entry);
