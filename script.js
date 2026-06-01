@@ -154,6 +154,129 @@ function computePopulation(south, west, north, east) {
   return Math.round(total);
 }
 
+
+// ── POPULATION FROM POLYGON (point-in-polygon raster mask) ───
+function pointInPolygon(px, py, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1];
+    const xj = ring[j][0], yj = ring[j][1];
+    if (((yi > py) !== (yj > py)) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi)
+      inside = !inside;
+  }
+  return inside;
+}
+
+function computePopulationFromRing(ring) {
+  if (!tifData) return null;
+  const { originX, originY, pixelW, pixelH, width, height } = tifMeta;
+  const lngs = ring.map(c => c[0]);
+  const lats  = ring.map(c => c[1]);
+  const west  = Math.min(...lngs), east  = Math.max(...lngs);
+  const south = Math.min(...lats), north = Math.max(...lats);
+  const colMin = Math.max(0,          Math.floor((west  - originX) / pixelW));
+  const colMax = Math.min(width - 1,  Math.ceil( (east  - originX) / pixelW));
+  const rowMin = Math.max(0,          Math.floor((originY - north) / pixelH));
+  const rowMax = Math.min(height - 1, Math.ceil( (originY - south) / pixelH));
+  if (colMin > colMax || rowMin > rowMax) return 0;
+  let total = 0;
+  for (let row = rowMin; row <= rowMax; row++) {
+    const pixLat = originY - (row + 0.5) * pixelH;
+    for (let col = colMin; col <= colMax; col++) {
+      const pixLng = originX + (col + 0.5) * pixelW;
+      if (!pointInPolygon(pixLng, pixLat, ring)) continue;
+      const val = tifData[row * width + col];
+      if (val === tifNodata || val < 0) continue;
+      total += val;
+    }
+  }
+  return Math.round(total);
+}
+
+function computePopulationFromGeoJSON(geojson) {
+  if (!tifData) return null;
+  let total = 0;
+  function processGeometry(geom) {
+    if (!geom) return;
+    if (geom.type === 'Polygon') {
+      total += computePopulationFromRing(geom.coordinates[0]);
+    } else if (geom.type === 'MultiPolygon') {
+      geom.coordinates.forEach(poly => { total += computePopulationFromRing(poly[0]); });
+    } else if (geom.type === 'GeometryCollection') {
+      geom.geometries.forEach(processGeometry);
+    }
+  }
+  if (geojson.type === 'FeatureCollection') {
+    geojson.features.forEach(f => processGeometry(f.geometry));
+  } else if (geojson.type === 'Feature') {
+    processGeometry(geojson.geometry);
+  } else {
+    processGeometry(geojson);
+  }
+  return total;
+}
+
+// ── FILE UPLOAD HANDLER (GeoJSON + KML) ──────────────────────
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const name = file.name;
+    let geojson = null;
+    try {
+      if (name.toLowerCase().endsWith('.kml')) {
+        const parser = new DOMParser();
+        const kmlDom = parser.parseFromString(text, 'text/xml');
+        geojson = toGeoJSON.kml(kmlDom);
+      } else {
+        geojson = JSON.parse(text);
+      }
+    } catch (err) {
+      logError(`Could not parse "${name}": ${err.message}`, logCount + 1);
+      return;
+    }
+    const hasFeatures = geojson && (
+      (geojson.features && geojson.features.length > 0) ||
+      geojson.type === 'Polygon' || geojson.type === 'MultiPolygon' || geojson.type === 'Feature'
+    );
+    if (!hasFeatures) {
+      logError(`No valid geometry found in "${name}".`, logCount + 1);
+      return;
+    }
+    const layer = L.geoJSON(geojson, {
+      style: { color: '#164D12', weight: 2, fillColor: '#164D12', fillOpacity: 0.10 }
+    }).addTo(map);
+    map.fitBounds(layer.getBounds(), { padding: [30, 30] });
+    shapes.push(layer);
+    const bounds = layer.getBounds();
+    const sw = bounds.getSouthWest();
+    const ne = bounds.getNorthEast();
+    logCount++;
+    updateBadge();
+    document.getElementById('console-output').querySelector('.empty-state')?.remove();
+    const featureCount = geojson.features ? geojson.features.length : 1;
+    const entry = document.createElement('div');
+    entry.className = 'log-entry info';
+    entry.innerHTML = `
+      <div class="log-ts">${timestamp()}</div>
+      <div class="log-type">\u{1F4C1} FILE \u00B7 ${name}</div>
+      <div class="log-coords">${featureCount} feature${featureCount !== 1 ? 's' : ''}\nSW: [${sw.lat.toFixed(4)}, ${sw.lng.toFixed(4)}]\nNE: [${ne.lat.toFixed(4)}, ${ne.lng.toFixed(4)}]</div>`;
+    const out = document.getElementById('console-output');
+    out.appendChild(entry);
+    out.scrollTop = out.scrollHeight;
+    const population = computePopulationFromGeoJSON(geojson);
+    if (population !== null) {
+      logPopulation(population, logCount, name);
+    } else {
+      logError('TIF not loaded yet — try again after the raster finishes loading.', logCount);
+    }
+  };
+  reader.readAsText(file);
+}
+
 // ── MODE SELECTOR ─────────────────────────────────────────────
 function setMode(m) {
   cancelDrawing();
@@ -260,8 +383,16 @@ map.on('dblclick', function(e) {
     count: finalPoints.length
   };
   logCoords(coordsData);
-  // Note: polygon population would need point-in-polygon masking; bbox is fully supported
-  logError('Population for polygons coming soon — use Bounding Box mode for now.', logCount);
+  // Convert Leaflet LatLng array to GeoJSON ring [lng, lat]
+  const ring = finalPoints.map(p => [p.lng, p.lat]);
+  ring.push(ring[0]); // close ring
+  const polyGeojson = { type: 'Polygon', coordinates: [ring] };
+  const population = computePopulationFromGeoJSON(polyGeojson);
+  if (population !== null) {
+    logPopulation(population, logCount, 'Drawn Polygon');
+  } else {
+    logError('TIF not loaded yet — draw again after the raster finishes loading.', logCount);
+  }
 });
 
 // ── CLEAR ─────────────────────────────────────────────────────
@@ -322,7 +453,7 @@ function logCoords(coords) {
   out.scrollTop = out.scrollHeight;
 }
 
-function logPopulation(population, index) {
+function logPopulation(population, index, label) {
   const out = document.getElementById('console-output');
   const millions = (population / 1_000_000).toFixed(4);
   const formatted = population.toLocaleString('en-IN');
@@ -344,7 +475,7 @@ function logPopulation(population, index) {
   entry.className = 'log-entry population';
   entry.innerHTML = `
     <div class="log-ts">${timestamp()}</div>
-    <div class="log-type pop-label">👥 POPULATION · BBOX #${index}</div>
+    <div class="log-type pop-label">👥 POPULATION · ${label || ('BBOX #' + index)}</div>
     <div class="log-coords">
       <span class="pop-big">${millions}M</span>
       <span class="pop-raw">${formatted} people</span>
@@ -354,7 +485,7 @@ function logPopulation(population, index) {
   out.appendChild(entry);
   out.scrollTop = out.scrollHeight;
 
-  console.log(`[GeoSketch] BBOX #${index} — Population: ${formatted}`);
+  console.log(`[GeoSketch] #${index} (${label || 'BBOX'}) — Population: ${formatted}`);
   pollutants.forEach(p => console.log(`  ${labels[p]}: ${numMonitorsCpcb(p, population)} stations`));
 }
 
@@ -364,7 +495,7 @@ function logError(msg, index) {
   entry.className = 'log-entry pop-error';
   entry.innerHTML = `
     <div class="log-ts">${timestamp()}</div>
-    <div class="log-type pop-label">⚠ NOTE · BBOX #${index}</div>
+    <div class="log-type pop-label">⚠ NOTE · #${index}</div>
     <div class="log-coords">${msg}</div>`;
   out.appendChild(entry);
   out.scrollTop = out.scrollHeight;

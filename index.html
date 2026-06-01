@@ -11,6 +11,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <!-- toGeoJSON: converts KML → GeoJSON client-side -->
+  <script src="https://cdn.jsdelivr.net/npm/@mapbox/togeojson@0.16.0/togeojson.min.js"></script>
 </head>
 <body>
 
@@ -22,6 +24,10 @@
   <div class="toolbar">
     <button class="btn" id="btn-bbox" onclick="setMode('bbox')">⬜ Bounding Box</button>
     <button class="btn" id="btn-poly" onclick="setMode('polygon')">⬡ Polygon</button>
+    <label class="btn" id="btn-upload" title="Upload a GeoJSON or KML file">
+      ⬆ Upload GeoJSON / KML
+      <input type="file" id="file-upload" accept=".geojson,.json,.kml" style="display:none" onchange="handleFileUpload(event)"/>
+    </label>
     <div class="divider"></div>
     <button class="btn danger" onclick="clearAll()">✕ Clear</button>
   </div>
@@ -42,7 +48,8 @@
     <div class="console-output" id="console-output">
       <div class="empty-state">
         <div class="icon">🗺️</div>
-        Draw a bounding box on the map.<br/>
+        Draw a bounding box or polygon,<br/>
+        or upload a GeoJSON / KML file.<br/>
         Population &amp; CPCB monitor<br/>requirements will appear here.
       </div>
     </div>
