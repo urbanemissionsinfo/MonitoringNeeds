@@ -177,8 +177,16 @@ header {
     overflow: hidden;
 }
 
-#map {
+/* ── MAP WRAP (positioning context for mode-indicator) ────── */
+.map-wrap {
     flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
     z-index: 1;
 }
 
@@ -462,4 +470,95 @@ label.btn:hover {
     border-color: var(--accent);
     color: var(--accent);
     background: var(--accent-lt);
+}
+
+/* ── MOBILE RESPONSIVE ────────────────────────────────────── */
+@media (max-width: 700px) {
+
+  /* Header: stack logo above toolbar */
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .logo {
+    font-size: 1.5rem;
+  }
+
+  /* Toolbar: wrap buttons, smaller text */
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .btn {
+    font-size: 0.7rem;
+    padding: 6px 10px;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  /* TIF status: smaller text */
+  .tif-status {
+    font-size: 0.68rem;
+    padding: 4px 12px;
+  }
+
+  /* Main: stack map on top, console below */
+  .main {
+    flex-direction: column;
+    overflow: visible;
+    height: auto;
+  }
+
+  body {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+
+  /* Map: fixed height on mobile */
+  #map {
+    height: 100vw;
+    min-height: 240px;
+    max-height: 380px;
+    flex: none;
+    width: 100%;
+  }
+
+  /* Console panel: full width below map, natural height */
+  .side-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 2px solid var(--border);
+    flex: none;
+    overflow: visible;
+    min-height: 280px;
+  }
+
+  .console-output {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  /* Monitors grid: 4 columns on mobile to fit in a row */
+  .monitors-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Mode indicator stays at bottom-left of #map on all screen sizes */
+
+  /* Pop-big slightly smaller */
+  .pop-big {
+    font-size: 1.4rem;
+  }
+
+  .empty-state {
+    margin-top: 24px;
+  }
 }
