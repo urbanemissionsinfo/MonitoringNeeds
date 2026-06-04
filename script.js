@@ -481,7 +481,7 @@ function logCoords(coords) {
 
 function logPopulation(population, index, label) {
   const out = document.getElementById('console-output');
-  const millions = (population / 1_000_000).toFixed(4);
+  const millions = (population / 1_000_000).toFixed(2);
   const formatted = population.toLocaleString('en-IN');
 
   const pollutants = ['spm','so2','no2','co'];
