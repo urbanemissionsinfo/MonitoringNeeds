@@ -189,7 +189,22 @@ header {
     height: 100%;
     z-index: 1;
 }
-
+.floating-map-btn {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000; /* Must sit above Leaflet layers */
+  background: #ff6b35;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  cursor: pointer;
+}
 /* Light map — no dark filter */
 .leaflet-tile { filter: none; }
 
@@ -529,6 +544,16 @@ label.btn:hover {
     max-height: 380px;
     flex: none;
     width: 100%;
+  }
+
+  /* Adjust floating mobile button layout slightly for thumb-reach on mobile screens */
+  .floating-map-btn {
+    bottom: 72px;
+    padding: 10px 20px;
+    font-size: 14px;
+    width: calc(100% - 40px); /* Extends nicely on small screens */
+    max-width: 280px;
+    text-align: center;
   }
 
   /* Console panel: full width below map, natural height */

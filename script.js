@@ -26,6 +26,16 @@ let polyPoints  = [];
 let polyLine    = null;
 let polyMarkers = [];
 
+// ── DOM ELEMENTS FOR MOBILE BUTTON ────────────────────────────
+const finishPolyBtn = document.getElementById('btn-finish-poly');
+
+if (finishPolyBtn) {
+  finishPolyBtn.addEventListener('click', function(e) {
+    L.DomEvent.stopPropagation(e); // Stop Leaflet from registering a map click behind button
+    finishPolygon();
+  });
+}
+
 // ── LOAD TIF ON STARTUP ───────────────────────────────────────
 (async function loadTif() {
   setTifStatus('loading', 'Loading LandScan raster…');
@@ -167,6 +177,7 @@ function pointInPolygon(px, py, ring) {
   return inside;
 }
 
+// Computes population for an array of coordinate rings [[lng, lat], ...]
 function computePopulationFromRing(ring) {
   if (!tifData) return null;
   const { originX, originY, pixelW, pixelH, width, height } = tifMeta;
@@ -287,7 +298,7 @@ function setMode(m) {
   ind.classList.add('active');
   ind.innerHTML = m === 'bbox'
     ? '⬜ Bounding Box Mode<div class="hint">Click &amp; drag to draw a rectangle</div>'
-    : '⬡ Polygon Mode<div class="hint">Click to add vertices · Double-click to finish</div>';
+    : '⬡ Polygon Mode<div class="hint">Tap locations to add corners · Use the button below to finish</div>';
   document.body.classList.add('drawing');
 }
 
@@ -299,6 +310,8 @@ function cancelDrawing() {
   polyMarkers.forEach(m => map.removeLayer(m));
   polyMarkers = [];
   if (polyLine) { map.removeLayer(polyLine); polyLine = null; }
+  
+  if (finishPolyBtn) finishPolyBtn.style.display = 'none'; // Hide mobile finish button
   document.body.classList.remove('drawing');
 }
 
@@ -339,7 +352,6 @@ map.on('mouseup', function(e) {
 
   logCoords(coordsData);
 
-  // Compute population & monitors synchronously (data already in memory)
   const population = computePopulation(sw.lat, sw.lng, ne.lat, ne.lng);
   if (population !== null) {
     logPopulation(population, logCount);
@@ -348,23 +360,34 @@ map.on('mouseup', function(e) {
   }
 });
 
-// ── POLYGON ───────────────────────────────────────────────────
+// ── POLYGON DRAWING ───────────────────────────────────────────
 map.on('click', function(e) {
   if (mode !== 'polygon') return;
+  
   polyPoints.push(e.latlng);
+  
+  // Create an explicit touch-friendly node visual marker
   const dot = L.circleMarker(e.latlng, {
-    radius: 5, color: '#ff6b35', fillColor: '#ff6b35', fillOpacity: 1, weight: 2
+    radius: 6, color: '#ff6b35', fillColor: '#ff6b35', fillOpacity: 1, weight: 2
   }).addTo(map);
   polyMarkers.push(dot);
+  
   if (polyLine) map.removeLayer(polyLine);
-  if (polyPoints.length > 1)
+  if (polyPoints.length > 1) {
     polyLine = L.polyline(polyPoints, { color: '#ff6b35', weight: 2, dashArray: '6 4' }).addTo(map);
+  }
+
+  // Show floating finish action once a valid shape can form (minimum 3 points)
+  if (polyPoints.length >= 3 && finishPolyBtn) {
+    finishPolyBtn.style.display = 'block';
+  }
 });
 
-map.on('dblclick', function(e) {
-  if (mode !== 'polygon' || polyPoints.length < 2) return;
-  polyPoints.pop();
-  polyMarkers[polyMarkers.length - 1] && map.removeLayer(polyMarkers.pop());
+// ── FINISH POLYGON CALCULATIONS ──────────────────────────────
+function finishPolygon() {
+  if (polyPoints.length < 3) return;
+
+  if (finishPolyBtn) finishPolyBtn.style.display = 'none'; // Clear out the button overlay
   if (polyLine) { map.removeLayer(polyLine); polyLine = null; }
   polyMarkers.forEach(m => map.removeLayer(m));
   polyMarkers = [];
@@ -383,19 +406,22 @@ map.on('dblclick', function(e) {
     count: finalPoints.length
   };
   logCoords(coordsData);
+  
   // Convert Leaflet LatLng array to GeoJSON ring [lng, lat]
   const ring = finalPoints.map(p => [p.lng, p.lat]);
-  ring.push(ring[0]); // close ring
+  ring.push(ring[0]); // close ring loop
+  
   const polyGeojson = { type: 'Polygon', coordinates: [ring] };
   const population = computePopulationFromGeoJSON(polyGeojson);
+  
   if (population !== null) {
     logPopulation(population, logCount, 'Drawn Polygon');
   } else {
     logError('TIF not loaded yet — draw again after the raster finishes loading.', logCount);
   }
-});
+}
 
-// ── CLEAR ─────────────────────────────────────────────────────
+// ── CLEAR ALL ─────────────────────────────────────────────────
 function clearAll() {
   cancelDrawing();
   shapes.forEach(l => map.removeLayer(l));
